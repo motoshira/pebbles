@@ -2,6 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      No external origins are needed: scripts/styles/HDRIs/Draco are all served
+      from this origin. blob:/data: cover dropped models and embedded textures;
+      wasm-unsafe-eval is required by the Draco decoder; style 'unsafe-inline' is
+      required because three.js sets inline styles on the canvas element.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' data: blob:; worker-src 'self' blob:"
+    />
+    <meta name="referrer" content="no-referrer" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pebbles — 3D Viewer</title>
     <meta

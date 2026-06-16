@@ -9,6 +9,14 @@ model and orbit/inspect it. It is a reference viewer, not an authoring or
 sketching tool. The whole project (UI strings, code, comments, identifiers) is
 in English by deliberate convention; keep it that way.
 
+## Working in this repo
+
+**Never commit or push directly to `main`.** All changes land via a pull request:
+branch off `main`, push the branch, and open a PR (`gh pr create --base main`).
+`main` is the deploy branch — merging a PR publishes to GitHub Pages — and is
+protected by a "changes must be made through a pull request" rule. Let the user
+review and merge; do not merge on their behalf unless asked.
+
 ## Commands
 
 This project uses **pnpm** (pinned via the `packageManager` field). Run from the repo root.
@@ -63,12 +71,28 @@ Data flow for loading a model:
 - **GLB vs glTF.** Only `.glb` and `.gltf` are accepted. GLB is self-contained
   and reliable; a `.gltf` that references external buffers/textures will fail
   because it is loaded from a `blob:` URL with no sibling files to resolve.
-- **Environment HDRIs are fetched at runtime.** `<Stage>`'s environment presets
-  pull HDR maps from the pmndrs CDN. The viewer needs network access for
-  lighting to look right; this is the place to change if offline/self-hosted
-  lighting is needed later.
-- **Bundle size.** three.js makes the JS chunk ~1.2 MB (gzip ~345 kB). The Vite
-  500 kB chunk warning is expected, not a regression.
+  External absolute URIs embedded in a model are deliberately blocked — see
+  `src/lib/safeResourceUrl.ts` (wired via `loader.manager.setURLModifier` in
+  `Model.tsx`) — so a malicious file cannot beacon out when opened.
+- **Everything is self-hosted; no external runtime origins.** The app is fully
+  same-origin by design so the CSP in `index.html` can forbid external fetches:
+  - Environment HDRIs are vendored in `public/hdri/`; `src/lib/environmentPresets.ts`
+    maps a preset to a same-origin URL. drei's CDN path is NOT used.
+  - The Draco decoder is vendored in `public/draco/`; `src/lib/configureLoaders.ts`
+    calls `useGLTF.setDecoderPath(...)` (imported for side effect in `main.tsx`)
+    to override drei's default gstatic CDN.
+  - **Do not** reintroduce a CDN-loaded asset without also widening the CSP. The
+    `public/draco/*.js` files are vendored third-party minified code and are
+    excluded from Biome (`biome.json` `files.includes`) — don't run `format` on them.
+- **CSP.** `index.html` ships a strict `<meta>` CSP (`'self'` + `blob:`/`data:`,
+  plus `wasm-unsafe-eval` for Draco and `'unsafe-inline'` styles for three's
+  canvas). GitHub Pages cannot set real headers, so `frame-ancestors`/HSTS are
+  not enforceable here. If you add a feature that loads from a new origin or uses
+  a new wasm/worker, update the CSP or it will silently break in the browser.
+- **Bundle size.** three.js makes the JS chunk ~1.2 MB (gzip ~345 kB); vendored
+  HDRIs (~6.4 MB) and the Draco decoder (~0.8 MB) are static assets fetched
+  on demand, not part of the JS bundle. The Vite 500 kB chunk warning is
+  expected, not a regression.
 
 ## Testing
 
