@@ -9,6 +9,14 @@ model and orbit/inspect it. It is a reference viewer, not an authoring or
 sketching tool. The whole project (UI strings, code, comments, identifiers) is
 in English by deliberate convention; keep it that way.
 
+## Working in this repo
+
+**Never commit or push directly to `main`.** All changes land via a pull request:
+branch off `main`, push the branch, and open a PR (`gh pr create --base main`).
+`main` is the deploy branch — merging a PR publishes to GitHub Pages — and is
+protected by a "changes must be made through a pull request" rule. Let the user
+review and merge; do not merge on their behalf unless asked.
+
 ## Commands
 
 This project uses **pnpm** (pinned via the `packageManager` field). Run from the repo root.
